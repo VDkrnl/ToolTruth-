@@ -1,0 +1,37 @@
+name: Deploy FastAPI backend
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**","sdk/**"]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Run tests
+        working-directory: backend
+        run: pytest tests -v --tb=short
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+      - name: Sync backend
+        run: |
+          rsync -az --delete --exclude='.env' --exclude='.venv' --exclude='uploads/' --exclude='**/__pycache__/' --exclude='.pytest_cache/' backend/ "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/tooltruth/backend/"
+      - name: Sync SDK
+        run: |
+          rsync -az --delete sdk/ "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/tooltruth/sdk/"
+      - name: Restart API
+        run: ssh "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "sudo systemctl restart tooltruth-api && sudo systemctl --no-pager --full status tooltruth-api"

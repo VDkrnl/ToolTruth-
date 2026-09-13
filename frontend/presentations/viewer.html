@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ToolTruth — Presentation Viewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .viewer-shell {
+      padding: 38px 0 70px
+    }
+
+    .viewer-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 22px
+    }
+
+    .viewer-head p {
+      color: var(--muted);
+      margin: 8px 0 0
+    }
+
+    .viewer {
+      height: calc(100vh - 190px);
+      min-height: 620px;
+      overflow: hidden;
+      background: #0d0f13
+    }
+
+    .viewer iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff
+    }
+
+    body.presentation-mode {
+      overflow: hidden;
+      background: #000;
+    }
+
+    body.presentation-mode .site-nav,
+    body.presentation-mode .viewer-head {
+      display: none !important;
+    }
+
+    body.presentation-mode .viewer-shell {
+      padding: 0;
+      width: 100vw;
+      max-width: none;
+    }
+
+    body.presentation-mode #viewer {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      min-height: 100vh;
+      margin: 0;
+      border-radius: 0;
+      z-index: 9999;
+    }
+
+    .viewer-message {
+      display: grid;
+      place-items: center;
+      height: 100%;
+      padding: 40px;
+      text-align: center;
+      color: var(--muted)
+    }
+
+    @media(max-width:700px) {
+      .viewer-shell {
+        padding-top: 22px
+      }
+
+      .viewer-head {
+        display: block
+      }
+
+      .viewer {
+        height: 75vh;
+        min-height: 480px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-nav">
+    <a class="brand" href="../index.html"><span class="brand-mark">TT</span><span>ToolTruth</span></a>
+    <nav><a href="../index.html">Home</a><a href="archive.html">Archive</a><a class="nav-admin"
+        href="../admin/login.html">Admin ↗</a></nav>
+  </header>
+  <main class="container viewer-shell">
+    <div class="viewer-head">
+      <div>
+        <span class="kicker">IN-BROWSER PRESENTATION</span>
+        <h1 id="title">Loading presentation…</h1>
+        <p id="meta"></p>
+      </div>
+      <div class="viewer-actions">
+        <a class="btn btn-ghost" href="archive.html">← Back to archive</a>
+        <button class="btn btn-primary" id="presentationMode">⛶ Full Screen</button>
+      </div>
+    </div>
+    <section class="viewer glass" id="viewer">
+      <div class="viewer-message">Loading presentation…</div>
+    </section>
+  </main>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script>
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const id = params.get("id");
+      const title = document.getElementById("title");
+      const meta = document.getElementById("meta");
+      const viewer = document.getElementById("viewer");
+      const presentationMode = document.getElementById("presentationMode");
+
+      presentationMode.addEventListener("click", async () => {
+        document.body.classList.add("presentation-mode");
+
+        try {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+          }
+        } catch (error) {
+          console.log("Fullscreen not available:", error);
+        }
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        if (!document.fullscreenElement) {
+          document.body.classList.remove("presentation-mode");
+        }
+      });
+
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && !document.fullscreenElement) {
+          document.body.classList.remove("presentation-mode");
+        }
+      });
+      if (!id) { title.textContent = "Presentation not found"; viewer.innerHTML = '<div class="viewer-message">Missing presentation version ID.</div>'; return }
+      try {
+        const versions = await ToolTruthAPI.versions();
+        const version = versions.find(v => String(v.id) === String(id));
+        if (version) {
+          title.textContent = version.title || "Presentation";
+          meta.textContent = `${version.version || ""} · ${version.date || ""} · ${version.authors || "ToolTruth Team"}`;
+        }
+        const file = await ToolTruthAPI.fileUrl(id);
+        viewer.innerHTML = `<iframe title="${(version?.title || "ToolTruth presentation").replace(/"/g, '&quot;')}" src="${file.url}#toolbar=0&navpanes=0&scrollbar=0" allow="fullscreen"></iframe>`;
+      } catch (err) {
+        title.textContent = "Presentation unavailable";
+        const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+        }[char]));
+        viewer.innerHTML = `<div class="viewer-message"><div><h2>Could not load this presentation</h2><p>${escapeHtml(err.message || "Please try again later.")}</p><a class="btn btn-primary" href="archive.html">Return to archive</a></div></div>`;
+      }
+    })();
+  </script>
+</body>
+
+</html>

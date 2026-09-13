@@ -1,0 +1,406 @@
+[
+  {
+    "id": "travel-001",
+    "description": "Check available seat",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_availability",
+      "payload": {
+        "seat_id": "SEAT-12A"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-002",
+    "description": "Hold available seat",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "hold",
+      "payload": {
+        "seat_id": "SEAT-12A"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-003",
+    "description": "Hold already held seat",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "hold",
+      "payload": {
+        "seat_id": "SEAT-13B"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-004",
+    "description": "Confirm active hold",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "confirm",
+      "payload": {
+        "booking_id": "BKG-100"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-005",
+    "description": "Confirm expired hold",
+    "domain": "travel",
+    "fault_type": "stale_fact",
+    "setup_state": {
+      "BKG-100": {
+        "state": "held",
+        "updated_at": "2000-01-01T00:00:00+00:00",
+        "hold_expires_at": "2999-01-01T00:00:00+00:00"
+      },
+      "SEAT-13B": {
+        "state": "held"
+      }
+    },
+    "tool_call": {
+      "action": "confirm",
+      "payload": {
+        "booking_id": "BKG-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "stale_fact"
+  },
+  {
+    "id": "travel-006",
+    "description": "Stale seat availability",
+    "domain": "travel",
+    "fault_type": "stale_fact",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_availability",
+      "payload": {
+        "seat_id": "SEAT-12A"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "stale_fact"
+  },
+  {
+    "id": "travel-007",
+    "description": "Hold missing seat id",
+    "domain": "travel",
+    "fault_type": "schema_error",
+    "setup_state": {},
+    "tool_call": {
+      "action": "hold",
+      "payload": {}
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "schema_error"
+  },
+  {
+    "id": "travel-008",
+    "description": "Confirm missing booking id",
+    "domain": "travel",
+    "fault_type": "schema_error",
+    "setup_state": {},
+    "tool_call": {
+      "action": "confirm",
+      "payload": {}
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "schema_error"
+  },
+  {
+    "id": "travel-009",
+    "description": "Check in confirmed booking",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "check_in",
+      "payload": {
+        "booking_id": "BKG-101"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-010",
+    "description": "Board before check-in",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "board",
+      "payload": {
+        "booking_id": "BKG-101"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-011",
+    "description": "Contradictory seat status",
+    "domain": "travel",
+    "fault_type": "contradiction",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_availability",
+      "payload": {
+        "seat_id": "SEAT-12A"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "contradiction",
+    "conflict_claim": {
+      "field": "status",
+      "value": "held"
+    }
+  },
+  {
+    "id": "travel-012",
+    "description": "Confirm unknown booking",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "confirm",
+      "payload": {
+        "booking_id": "BKG-999"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-013",
+    "description": "Duplicate hold",
+    "domain": "travel",
+    "fault_type": "duplicate_action",
+    "setup_state": {},
+    "tool_call": {
+      "action": "hold",
+      "payload": {
+        "seat_id": "SEAT-12A"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "duplicate_action"
+  },
+  {
+    "id": "travel-014",
+    "description": "Unknown seat availability",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_availability",
+      "payload": {
+        "seat_id": "SEAT-99Z"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-015",
+    "description": "Cancel confirmed booking",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "cancel",
+      "payload": {
+        "booking_id": "BKG-101"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-016",
+    "description": "Cancel cancelled booking",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {
+      "BKG-101": {
+        "state": "cancelled"
+      }
+    },
+    "tool_call": {
+      "action": "cancel",
+      "payload": {
+        "booking_id": "BKG-101"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-017",
+    "description": "Check in held booking",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "check_in",
+      "payload": {
+        "booking_id": "BKG-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-018",
+    "description": "Stale confirm fact",
+    "domain": "travel",
+    "fault_type": "stale_fact",
+    "setup_state": {
+      "BKG-100": {
+        "state": "held",
+        "updated_at": "2000-01-01T00:00:00+00:00",
+        "hold_expires_at": "2999-01-01T00:00:00+00:00"
+      },
+      "SEAT-13B": {
+        "state": "held"
+      }
+    },
+    "tool_call": {
+      "action": "confirm",
+      "payload": {
+        "booking_id": "BKG-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "stale_fact"
+  },
+  {
+    "id": "travel-019",
+    "description": "Contradictory booking status",
+    "domain": "travel",
+    "fault_type": "contradiction",
+    "setup_state": {},
+    "tool_call": {
+      "action": "confirm",
+      "payload": {
+        "booking_id": "BKG-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "contradiction",
+    "conflict_claim": {
+      "field": "status",
+      "value": "held"
+    }
+  },
+  {
+    "id": "travel-020",
+    "description": "Duplicate confirm",
+    "domain": "travel",
+    "fault_type": "duplicate_action",
+    "setup_state": {},
+    "tool_call": {
+      "action": "confirm",
+      "payload": {
+        "booking_id": "BKG-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "duplicate_action"
+  },
+  {
+    "id": "travel-021",
+    "description": "Hold second available seat",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "hold",
+      "payload": {
+        "seat_id": "SEAT-15D"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-022",
+    "description": "Board checked-in booking",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "board",
+      "payload": {
+        "booking_id": "BKG-101"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-023",
+    "description": "Confirm cancelled booking",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "confirm",
+      "payload": {
+        "booking_id": "BKG-101"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "travel-024",
+    "description": "Context says seat held while simulator says available",
+    "domain": "travel",
+    "fault_type": "contradiction",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_availability",
+      "payload": {
+        "seat_id": "SEAT-12A"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "contradiction",
+    "context_snapshot": {
+      "status": "held"
+    }
+  },
+  {
+    "id": "travel-025",
+    "description": "Cancel unknown booking",
+    "domain": "travel",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "cancel",
+      "payload": {
+        "booking_id": "BKG-999"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  }
+]

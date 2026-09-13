@@ -1,0 +1,401 @@
+[
+  {
+    "id": "ecom-001",
+    "description": "Get inventory for in-stock product",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_inventory",
+      "payload": {
+        "product_id": "SKU-100"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-002",
+    "description": "Reserve one unit from in-stock product",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-100",
+        "quantity": 1
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-003",
+    "description": "Reserve more units than available",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-100",
+        "quantity": 11
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-004",
+    "description": "Sell product that is not reserved",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "sell",
+      "payload": {
+        "product_id": "SKU-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-005",
+    "description": "Sell reserved product",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "sell",
+      "payload": {
+        "product_id": "SKU-102"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-006",
+    "description": "Stale inventory fact",
+    "domain": "ecommerce",
+    "fault_type": "stale_fact",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_inventory",
+      "payload": {
+        "product_id": "SKU-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "stale_fact"
+  },
+  {
+    "id": "ecom-007",
+    "description": "Reserve missing quantity",
+    "domain": "ecommerce",
+    "fault_type": "schema_error",
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "schema_error"
+  },
+  {
+    "id": "ecom-008",
+    "description": "Reserve missing product id",
+    "domain": "ecommerce",
+    "fault_type": "schema_error",
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "quantity": 1
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "schema_error"
+  },
+  {
+    "id": "ecom-009",
+    "description": "Return sold product",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "return",
+      "payload": {
+        "product_id": "SKU-103"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-010",
+    "description": "Reserve zero units",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-100",
+        "quantity": 0
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-011",
+    "description": "Conflicting price evidence",
+    "domain": "ecommerce",
+    "fault_type": "contradiction",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_inventory",
+      "payload": {
+        "product_id": "SKU-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "contradiction",
+    "conflict_claim": {
+      "field": "price",
+      "value": 888
+    }
+  },
+  {
+    "id": "ecom-012",
+    "description": "Reserve out-of-stock product",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-103",
+        "quantity": 1
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-013",
+    "description": "Duplicate reserve",
+    "domain": "ecommerce",
+    "fault_type": "duplicate_action",
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-100",
+        "quantity": 1
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "duplicate_action"
+  },
+  {
+    "id": "ecom-014",
+    "description": "Unknown product",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_inventory",
+      "payload": {
+        "product_id": "SKU-999"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-015",
+    "description": "Sell returned product",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "sell",
+      "payload": {
+        "product_id": "SKU-104"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-016",
+    "description": "Negative quantity",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-100",
+        "quantity": -1
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-017",
+    "description": "Reserve second in-stock product",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-101",
+        "quantity": 1
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-018",
+    "description": "Stale sell action",
+    "domain": "ecommerce",
+    "fault_type": "stale_fact",
+    "setup_state": {},
+    "tool_call": {
+      "action": "sell",
+      "payload": {
+        "product_id": "SKU-102"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "stale_fact"
+  },
+  {
+    "id": "ecom-019",
+    "description": "Conflicting quantity evidence",
+    "domain": "ecommerce",
+    "fault_type": "contradiction",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_inventory",
+      "payload": {
+        "product_id": "SKU-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "contradiction",
+    "conflict_claim": {
+      "field": "quantity",
+      "value": 7
+    }
+  },
+  {
+    "id": "ecom-020",
+    "description": "Duplicate sell",
+    "domain": "ecommerce",
+    "fault_type": "duplicate_action",
+    "setup_state": {},
+    "tool_call": {
+      "action": "sell",
+      "payload": {
+        "product_id": "SKU-102"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "duplicate_action"
+  },
+  {
+    "id": "ecom-021",
+    "description": "Zero price edge case",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {
+      "SKU-100": {
+        "price": 0
+      }
+    },
+    "tool_call": {
+      "action": "get_inventory",
+      "payload": {
+        "product_id": "SKU-100"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-022",
+    "description": "Reserve exact stock",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-100",
+        "quantity": 10
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-023",
+    "description": "Reserve one over stock",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "reserve",
+      "payload": {
+        "product_id": "SKU-100",
+        "quantity": 11
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "ecom-024",
+    "description": "Context says sold but inventory says in-stock",
+    "domain": "ecommerce",
+    "fault_type": "contradiction",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_inventory",
+      "payload": {
+        "product_id": "SKU-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "contradiction",
+    "context_snapshot": {
+      "state": "sold"
+    }
+  },
+  {
+    "id": "ecom-025",
+    "description": "Return product never sold",
+    "domain": "ecommerce",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "return",
+      "payload": {
+        "product_id": "SKU-101"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  }
+]

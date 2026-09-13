@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ToolTruth — Verification for AI Agent Tools</title>
+  <meta name="description"
+    content="ToolTruth is a typed consistency and verification layer between AI agents and external tools.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.css">
+</head>
+
+<body data-page="home">
+  <div class="bg-grid"></div>
+  <header class="site-nav">
+    <a class="brand" href="index.html"><span class="brand-mark">TT</span><span>ToolTruth</span></a>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+    <nav>
+      <a href="#overview">Overview</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#team">Team</a>
+      <a href="prototype/index.html">Prototype</a>
+      <a href="#milestone">Milestone</a>
+      <a href="presentations/v1.html">Planning v1</a><a href="evidence/index.html">Evidence</a><a
+        href="benchmark/index.html">Benchmark</a>
+      <a href="presentations/archive.html">Archive</a>
+      <a class="nav-admin" href="admin/login.html">Admin ↗</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero container">
+      <div class="eyebrow"><span class="pulse"></span> AI agent reliability · semester project</div>
+      <h1>Make tool calls<br><span class="gradient-text">truth-aware.</span></h1>
+      <p class="hero-copy">ToolTruth is a typed consistency and verification layer that sits between AI agents and
+        external tools—catching contradictory, stale, or illegal-state information before an agent acts on it.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="presentations/v1.html">View Planning v1 <span>→</span></a>
+        <a class="btn btn-ghost" href="#architecture">Explore architecture</a>
+      </div>
+      <div class="hero-status glass">
+        <div><span class="status-dot"></span><strong>Verification pipeline online</strong></div>
+        <span class="mono">AGENT → TOOL → TRUTH CHECK → ACTION</span>
+      </div>
+    </section>
+
+    <section id="overview" class="section container">
+      <div class="section-head">
+        <div><span class="kicker">01 / PROJECT</span>
+          <h2>Why ToolTruth?</h2>
+        </div>
+        <p>External tools can return information that is valid in isolation but inconsistent with the agent's current
+          state. ToolTruth makes those contradictions explicit before execution.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card glass">
+          <div class="icon">⌁</div>
+          <h3>Typed consistency</h3>
+          <p>Represent tool outputs and expected state as structured, checkable facts rather than opaque text.</p><span
+            class="tag">TYPE SAFETY</span>
+        </article>
+        <article class="feature-card glass">
+          <div class="icon">◌</div>
+          <h3>Staleness detection</h3>
+          <p>Identify information whose freshness no longer satisfies the constraints of an agent action.</p><span
+            class="tag">FRESHNESS</span>
+        </article>
+        <article class="feature-card glass">
+          <div class="icon">✓</div>
+          <h3>Illegal-state guards</h3>
+          <p>Stop contradictory or impossible transitions from reaching downstream tools and actions.</p><span
+            class="tag">VERIFICATION</span>
+        </article>
+      </div>
+    </section>
+
+    <section id="architecture" class="section container">
+      <div class="section-head">
+        <div><span class="kicker">02 / SYSTEM</span>
+          <h2>Verification architecture</h2>
+        </div>
+        <p>A deliberately small boundary layer: receive intent, call the external tool, validate the result, then either
+          permit or block the action.</p>
+      </div>
+      <div class="architecture glass">
+        <div class="arch-node"><small>01</small><strong>AI Agent</strong><span>Intent + state</span></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node active"><small>02</small><strong>ToolTruth</strong><span>Typed verification</span><b>TRUTH
+            CHECK</b></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node"><small>03</small><strong>External Tools</strong><span>APIs / services</span></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node"><small>04</small><strong>Storage</strong><span>PostgreSQL + S3</span></div>
+      </div>
+      <div class="flow-row">
+        <span>REQUEST</span><i>→</i><span>TOOL RESULT</span><i>→</i><span>SCHEMA CHECK</span><i>→</i><span>STATE
+          CHECK</span><i>→</i><span class="pass">ALLOW / BLOCK</span>
+      </div>
+    </section>
+
+    <section class="section container">
+      <div class="section-head">
+        <div><span class="kicker">03 / DELIVERABLES</span>
+          <h2>Project trail</h2>
+        </div>
+        <p>Every published deliverable is versioned. Older versions remain accessible for review and assessment.</p>
+      </div>
+      <div id="deliverables" class="timeline"></div>
+    </section>
+
+    <section id="milestone" class="section container">
+      <div class="section-head">
+        <div><span class="kicker">05 / MILESTONE</span>
+          <h2>Milestones / Gantt</h2>
+        </div>
+        <p>Seven phases, their deliverables, and an interactive project schedule anchored to the 10 August 2026 project start.</p>
+      </div>
+
+      <section class="milestone-timeline" id="milestones"></section>
+
+      <section class="section" id="gantt-section">
+        <div class="section-head">
+          <div><span class="kicker">INTERACTIVE SCHEDULE</span>
+            <h2>Full project Gantt</h2>
+          </div>
+          <p>Switch between week, month, and day views. Subtasks mirror the implementation plan.</p>
+        </div>
+        <div class="glass gantt-panel">
+          <div class="gantt-toolbar">
+            <span class="muted">Project start: 2026-08-10 · 17 weeks</span>
+            <div class="gantt-controls">
+              <button data-view="Week">Weeks</button>
+              <button data-view="Month">Months</button>
+              <button data-view="Day">Days</button>
+            </div>
+          </div>
+          <div id="gantt" class="gantt frappe-gantt-host"></div>
+          <div class="gantt-legend">
+            <span><i></i> Planned work</span>
+            <span><i></i> Parallel work</span>
+            <span><i></i> Validation / final phase</span>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="team" class="section container">
+      <div class="section-head">
+        <div><span class="kicker">06 / TEAM</span>
+          <h2>The people behind it</h2>
+        </div>
+      </div>
+      <div id="team-grid" class="team-grid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div><strong>ToolTruth</strong><span>Typed verification for AI agent tool calls.</span></div>
+      <div><span>Software Engineering Project · 2026</span><a id="repo-link"
+          href="https://github.com/YOUR-USERNAME/YOUR-REPO" target="_blank" rel="noreferrer">Repository ↗</a></div>
+    </div>
+  </footer>
+  <div id="toast" class="toast"></div>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.umd.js"></script>
+  <script src="js/milestone.js"></script>
+  <script>
+    const repoLink = document.getElementById("repo-link");
+    if (repoLink && window.TOOLTRUTH_CONFIG?.GITHUB_REPO_URL) {
+      repoLink.href = window.TOOLTRUTH_CONFIG.GITHUB_REPO_URL;
+    }
+  </script>
+</body>
+
+</html>

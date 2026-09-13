@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ToolTruth — Admin Dashboard</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <header class="site-nav"><a class="brand" href="../index.html"><span
+                class="brand-mark">TT</span><span>ToolTruth</span></a>
+        <nav><a href="../index.html">Public site</a><button id="logout" class="text-btn">Sign out</button></nav>
+    </header>
+    <main class="container dashboard">
+        <div class="page-heading"><span class="kicker">ADMIN / CONTROL PLANE</span>
+            <h1>Publish a deliverable</h1>
+            <p>Upload a presentation, attach metadata, present it in full screen, or delete it when you no longer need it.</p>
+        </div>
+        <div class="admin-grid">
+            <section class="glass panel">
+                <div class="panel-head">
+                    <h2>1. Upload file</h2><span class="tag">S3 / Local</span>
+                </div><label id="drop-zone" class="drop-zone">
+                    <input id="file-input" type="file"
+                        accept=".pdf,.ppt,.pptx,.doc,.docx,.zip,.png,.jpg,.jpeg,.webp">
+                    <input id="folder-input" type="file" webkitdirectory directory multiple hidden>
+                    <span class="drop-icon">＋</span><strong>Drop a file or folder here</strong>
+                    <small>or click to browse · max 25 MB · folders are zipped automatically · PowerPoint files get an in-site PDF preview</small>
+                    <b id="file-name"></b>
+                </label>
+                <div class="upload-actions">
+                    <button id="choose-folder" type="button" class="btn btn-ghost">Choose folder</button>
+                </div>
+                <div id="upload-progress" class="progress"><span></span></div>
+                <div id="upload-status" class="muted"></div>
+            </section>
+            <section class="glass panel">
+                <div class="panel-head">
+                    <h2>2. Metadata</h2><span class="tag">VERSIONED</span>
+                </div>
+                <form id="publish-form"><label>Title<input id="title" required
+                            placeholder="Planning Presentation"></label>
+                    <div class="form-row"><label>Deliverable<select id="slug">
+                                <option value="planning">Planning</option>
+                                <option value="demo">Demo</option>
+                                <option value="report">Report</option>
+                                <option value="other">Other</option>
+                            </select></label><label>Version<input id="version" required value="v1"></label></div>
+                    <div class="form-row"><label>Date<input id="date" type="date" required></label><label>Authors<input
+                                id="authors" required placeholder="ToolTruth Team"></label></div><label>Change
+                        summary<textarea id="summary" required rows="5"
+                            placeholder="What changed in this version?"></textarea><button class="btn btn-primary full"
+                            type="submit">Publish version →</button>
+                </form>
+            </section>
+        </div>
+        <section class="glass panel">
+            <div class="panel-head">
+                <h2>Publishing history</h2><button id="refresh" class="btn btn-ghost">Refresh</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Version</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Presentation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <div id="toast" class="toast"></div>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,406 @@
+[
+  {
+    "id": "devops-001",
+    "description": "Read open issue",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_issue",
+      "payload": {
+        "issue_id": "ISS-100"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-002",
+    "description": "Start open issue",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "start",
+      "payload": {
+        "issue_id": "ISS-100"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-003",
+    "description": "Start already reviewed issue",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "start",
+      "payload": {
+        "issue_id": "ISS-101"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-004",
+    "description": "Deploy production with blocking issue",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "deploy",
+      "payload": {
+        "deployment_id": "DEP-100",
+        "environment": "prod"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-005",
+    "description": "Deploy staging",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "deploy",
+      "payload": {
+        "deployment_id": "DEP-100",
+        "environment": "staging"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-006",
+    "description": "Stale issue fact",
+    "domain": "devops",
+    "fault_type": "stale_fact",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_issue",
+      "payload": {
+        "issue_id": "ISS-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "stale_fact"
+  },
+  {
+    "id": "devops-007",
+    "description": "Deploy missing environment",
+    "domain": "devops",
+    "fault_type": "schema_error",
+    "setup_state": {},
+    "tool_call": {
+      "action": "deploy",
+      "payload": {
+        "deployment_id": "DEP-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "schema_error"
+  },
+  {
+    "id": "devops-008",
+    "description": "Get issue missing id",
+    "domain": "devops",
+    "fault_type": "schema_error",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_issue",
+      "payload": {}
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "schema_error"
+  },
+  {
+    "id": "devops-009",
+    "description": "Close issue with linked PR",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "close_issue",
+      "payload": {
+        "issue_id": "ISS-101"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-010",
+    "description": "Close issue without linked PR",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "close_issue",
+      "payload": {
+        "issue_id": "ISS-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-011",
+    "description": "Contradictory blocking claim",
+    "domain": "devops",
+    "fault_type": "contradiction",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_issue",
+      "payload": {
+        "issue_id": "ISS-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "contradiction",
+    "conflict_claim": {
+      "field": "blocking",
+      "value": true
+    }
+  },
+  {
+    "id": "devops-012",
+    "description": "Deploy when staging incomplete",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "deploy",
+      "payload": {
+        "deployment_id": "DEP-100",
+        "environment": "prod",
+        "staging_complete": false
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-013",
+    "description": "Duplicate deploy",
+    "domain": "devops",
+    "fault_type": "duplicate_action",
+    "setup_state": {},
+    "tool_call": {
+      "action": "deploy",
+      "payload": {
+        "deployment_id": "DEP-100",
+        "environment": "staging"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "duplicate_action"
+  },
+  {
+    "id": "devops-014",
+    "description": "Unknown issue",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_issue",
+      "payload": {
+        "issue_id": "ISS-999"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-015",
+    "description": "Close closed issue",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "close_issue",
+      "payload": {
+        "issue_id": "ISS-104"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-016",
+    "description": "Start unknown issue",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "start",
+      "payload": {
+        "issue_id": "ISS-999"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-017",
+    "description": "Deploy second deployment",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "deploy",
+      "payload": {
+        "deployment_id": "DEP-101",
+        "environment": "prod"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-018",
+    "description": "Stale production deployment fact",
+    "domain": "devops",
+    "fault_type": "stale_fact",
+    "setup_state": {},
+    "tool_call": {
+      "action": "deploy",
+      "payload": {
+        "deployment_id": "DEP-100",
+        "environment": "prod"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "stale_fact"
+  },
+  {
+    "id": "devops-019",
+    "description": "Contradictory issue state",
+    "domain": "devops",
+    "fault_type": "contradiction",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_issue",
+      "payload": {
+        "issue_id": "ISS-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "contradiction",
+    "conflict_claim": {
+      "field": "state",
+      "value": "closed"
+    }
+  },
+  {
+    "id": "devops-020",
+    "description": "Duplicate start",
+    "domain": "devops",
+    "fault_type": "duplicate_action",
+    "setup_state": {},
+    "tool_call": {
+      "action": "start",
+      "payload": {
+        "issue_id": "ISS-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "duplicate_action"
+  },
+  {
+    "id": "devops-021",
+    "description": "Production deploy after staging setup",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {
+      "DEP-100": {
+        "state": "staging"
+      },
+      "ISS-100": {
+        "blocking": false
+      },
+      "ISS-102": {
+        "blocking": false
+      }
+    },
+    "tool_call": {
+      "action": "deploy",
+      "payload": {
+        "deployment_id": "DEP-100",
+        "environment": "prod"
+      }
+    },
+    "expected_outcome": "allowed",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-022",
+    "description": "Merge-like action is unsupported",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "merge",
+      "payload": {
+        "issue_id": "ISS-101"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-023",
+    "description": "Production deploy with explicit blocking context",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "deploy",
+      "payload": {
+        "deployment_id": "DEP-100",
+        "environment": "prod",
+        "blocking_issue": true
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  },
+  {
+    "id": "devops-024",
+    "description": "Context contradicts issue blocking state",
+    "domain": "devops",
+    "fault_type": "contradiction",
+    "setup_state": {},
+    "tool_call": {
+      "action": "get_issue",
+      "payload": {
+        "issue_id": "ISS-100"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": "contradiction",
+    "context_snapshot": {
+      "blocking": true
+    }
+  },
+  {
+    "id": "devops-025",
+    "description": "Close unknown issue",
+    "domain": "devops",
+    "fault_type": null,
+    "setup_state": {},
+    "tool_call": {
+      "action": "close_issue",
+      "payload": {
+        "issue_id": "ISS-999"
+      }
+    },
+    "expected_outcome": "blocked",
+    "expected_fault": null
+  }
+]

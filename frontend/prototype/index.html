@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ToolTruth — Prototype Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body data-page="prototype">
+<div class="bg-grid"></div>
+<header class="site-nav">
+<a class="brand" href="../index.html"><span class="brand-mark">TT</span><span>ToolTruth</span></a>
+<button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+<nav><a href="../index.html">Home</a><a href="../evidence/index.html">Evidence</a><a href="../benchmark/index.html">Benchmark</a><a href="index.html">Prototype</a><a href="../milestone/index.html">Milestone</a><a href="../presentations/archive.html">Archive</a></nav>
+</header>
+<main class="container proto-page">
+<section class="page-heading">
+<span class="kicker">LIVE SIMULATION · DETERMINISTIC VERIFIER</span>
+<h1>Prototype <span class="gradient-text">Lab</span></h1>
+<p>Inspect versioned domain state, inject controlled faults, run a verified tool action, and produce an auditable decision certificate.</p>
+</section>
+
+<section class="proto-layout">
+<aside class="proto-sidebar">
+<div class="glass proto-card">
+<div class="panel-head"><div><span class="kicker">A / STATE</span><h2>State machine</h2></div><span id="api-status" class="severity-chip">Checking API</span></div>
+<label>Domain<select id="domain"><option value="ecommerce">E-commerce</option><option value="travel">Travel</option><option value="devops">DevOps</option></select></label>
+<div id="state-graph" class="state-graph" aria-label="State transition graph"></div>
+<div id="state-machine-meta"></div>
+</div>
+</aside>
+
+<div class="proto-main">
+<section class="glass proto-card">
+<div class="panel-head"><div><span class="kicker">B / FAULT INJECTOR</span><h2>Controlled faults</h2></div><span class="muted">One active fault at a time</span></div>
+<div class="fault-toggles">
+<label class="fault-toggle"><input type="checkbox" data-fault="stale_evidence"><span>Stale evidence</span><small>Age <b id="stale-age-label">400s</b> <select data-severity-for="stale_evidence"><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></small></label>
+<label class="fault-toggle"><input type="checkbox" data-fault="contradictory_observation"><span>Contradictory observation</span><small>Conflicting claim <select data-severity-for="contradictory_observation"><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></small></label>
+<label class="fault-toggle"><input type="checkbox" data-fault="missing_update"><span>Missing update</span><small>Required field removed <select data-severity-for="missing_update"><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></small></label>
+<label class="fault-toggle"><input type="checkbox" data-fault="duplicate_action"><span>Duplicate action</span><small>Idempotency retry <select data-severity-for="duplicate_action"><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></small></label>
+<label class="fault-toggle"><input type="checkbox" data-fault="out_of_order"><span>Out-of-order event</span><small>Causal sequence broken <select data-severity-for="out_of_order"><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></small></label>
+<label class="fault-toggle"><input type="checkbox" data-fault="race_condition"><span>Race condition</span><small>Concurrent mutation <select data-severity-for="race_condition"><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></small></label>
+<label class="fault-toggle"><input type="checkbox" data-fault="partial_failure"><span>Partial failure</span><small>Compensation required <select data-severity-for="partial_failure"><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></small></label>
+<label class="fault-toggle"><input type="checkbox" data-fault="invalid_transition"><span>Invalid transition</span><small>Illegal state forced <select data-severity-for="invalid_transition"><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></small></label>
+</div>
+<div class="fault-controls">
+
+<label>Stale age (seconds)<input id="stale-age" type="range" min="0" max="900" value="400"><output id="stale-age-output">400</output></label>
+<label>Conflict field<input id="conflict-field" value="price"></label>
+<label>Conflict value<input id="conflict-value" value="0"></label>
+<label>Forced state<input id="forced-state" value=""></label>
+</div>
+<div class="constraint-strip">
+<label><input id="budget-enabled" type="checkbox"> User budget constraint</label>
+<label>Budget limit<input id="budget-limit" type="number" min="0" placeholder="e.g. 500"></label>
+</div>
+</section>
+
+<section class="glass proto-card">
+<div class="panel-head"><div><span class="kicker">C / SIMULATION</span><h2>Run a tool call</h2></div><span id="run-id" class="mono"></span></div>
+<div class="form-row">
+<label>Entity ID<input id="entity-id" value="SKU-100"></label>
+<label>Action<select id="action"></select></label>
+</div>
+<label>Payload JSON<textarea id="payload" rows="6">{ "product_id": "SKU-100", "quantity": 1 }</textarea></label>
+<button class="btn btn-primary" id="run">Run Simulation <span>→</span></button>
+<div id="result" class="simulation-result"></div>
+</section>
+
+<section class="glass proto-card" id="certificate-card" hidden>
+<div class="panel-head"><div><span class="kicker">D / CERTIFICATE</span><h2>Decision certificate</h2></div></div>
+<div id="certificate"></div>
+<div class="hero-actions"><button class="btn btn-primary" id="generate-cert">Generate Certificate</button><button class="btn btn-ghost" id="download-cert" disabled>Download JSON</button></div>
+</section>
+
+<section class="glass proto-card">
+<div class="panel-head"><div><span class="kicker">E / COMPARISON</span><h2>Baseline metrics</h2></div><span class="muted">Five deterministic modes</span></div>
+<div class="table-wrap"><table class="comparison-table"><thead><tr><th>Mode</th><th>Precision</th><th>Recall</th><th>False-block</th><th>Unsafe prevented</th><th>Task success</th><th>Latency</th><th>Tokens</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
+</section>
+</div>
+</section>
+</main>
+<footer class="footer"><div class="container footer-inner"><div><strong>ToolTruth · Prototype Lab</strong><span>Public demo uses deterministic simulator domains.</span></div><span class="mono">Verifier decisions are not LLM overrides.</span></div></footer>
+<div id="toast" class="toast"></div>
+<script src="../js/config.js"></script><script src="prototype.js"></script>
+</body></html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ToolTruth — Planning Presentation v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.css">
+<style>
+  .gantt-panel { overflow-x: auto; padding: 1rem; }
+  #gantt { min-width: 1050px; }
+  .gantt-toolbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .gantt-toolbar .muted { margin:0; }
+  .gantt-controls { display:flex; gap:.5rem; flex-wrap:wrap; }
+  .gantt-controls button { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:inherit; border-radius:8px; padding:.45rem .7rem; cursor:pointer; }
+  .gantt-controls button:hover { background:rgba(255,255,255,.08); }
+  .gantt-legend { display:flex; gap:1rem; flex-wrap:wrap; margin-top:.75rem; font-size:.82rem; }
+  .gantt-legend span { display:inline-flex; align-items:center; gap:.4rem; }
+  .gantt-legend i { width:.7rem; height:.7rem; border-radius:2px; display:inline-block; background:currentColor; }
+  .gantt.frappe-gantt-host { background:transparent; }
+</style>
+</head>
+<body class="presentation-page">
+<header class="site-nav"><a class="brand" href="../index.html"><span class="brand-mark">TT</span><span>ToolTruth</span></a><nav><a href="../index.html">Home</a><a href="archive.html">Archive</a><a href="../evidence/index.html">Evidence</a><a href="../benchmark/index.html">Benchmark</a><a href="../prototype/index.html">Prototype</a><a href="../milestone/index.html">Milestone</a><a class="nav-admin" href="../admin/login.html">Admin ↗</a></nav></header>
+<div class="presentation-layout">
+<aside class="side-nav glass"><div class="side-title">PLANNING v1</div><a href="#scope">01 Scope</a><a href="#users">02 Users</a><a href="#features">03 Features</a><a href="#architecture">04 Architecture</a><a href="#quality">05 Quality</a><a href="#risks">06 Risks</a><a href="#timeline">07 Timeline</a></aside>
+<main class="presentation container">
+<section class="presentation-cover"><div class="eyebrow"><span class="pulse"></span> TOOLTRUTH / PLANNING</div><h1>Verification before<br><span class="gradient-text">action.</span></h1><p>Planning & system architecture document</p><div class="meta-row"><span>Version <b>v1</b></span><span>11 August 2026</span><span>Authors: Tejbeer Kaur, Shaurya Sharma, Raghav Sachdeva, Vaibhav Dhiman</span></div></section>
+<section id="scope" class="doc-section"><span class="kicker">01 / SCOPE</span><h2>Project scope & objectives</h2><p>ToolTruth introduces a verification boundary between an AI agent and external tools. Its purpose is to detect contradictions, stale values, invalid transitions, and other illegal states before a tool result is trusted by the agent.</p><div class="callout"><strong>Core proposition</strong><span>Don't let a plausible tool response become an unverified action.</span></div><ul class="check-list"><li>Model tool contracts and relevant state as typed data.</li><li>Validate tool outputs against expected schemas and state constraints.</li><li>Expose explainable verification results to the calling agent.</li><li>Keep a versioned trail of project deliverables and planning decisions.</li></ul></section>
+<section id="users" class="doc-section"><span class="kicker">02 / USERS</span><h2>Proposed functions & users</h2><div class="table-wrap"><table><thead><tr><th>User</th><th>Function</th><th>Expected outcome</th></tr></thead><tbody><tr><td>AI agent</td><td>Submit tool call + context</td><td>Receive verified / blocked result</td></tr><tr><td>Developer</td><td>Define tool schemas and constraints</td><td>Consistent validation rules</td></tr><tr><td>Project admin</td><td>Upload and publish deliverables</td><td>Auditable version history</td></tr><tr><td>Evaluator / reviewer</td><td>Browse project evidence</td><td>Clear, stable project trail</td></tr></tbody></table></div></section>
+<section id="features" class="doc-section"><span class="kicker">03 / FEATURES</span><h2>System features & external interfaces</h2><div class="feature-grid"><article class="feature-card glass"><div class="icon">01</div><h3>Contract validation</h3><p>Schema/type checks for tool inputs and outputs.</p></article><article class="feature-card glass"><div class="icon">02</div><h3>State validation</h3><p>Detect stale, contradictory or illegal-state transitions.</p></article><article class="feature-card glass"><div class="icon">03</div><h3>Evidence storage</h3><p>Versioned metadata in PostgreSQL and files in S3.</p></article></div></section>
+<section id="architecture" class="doc-section"><span class="kicker">04 / ARCHITECTURE</span><h2>Full-stack architecture</h2><div class="big-architecture glass"><div><b>GitHub Pages</b><small>HTML / CSS / JS</small></div><strong>↕ HTTPS / JSON</strong><div class="highlight"><b>FastAPI</b><small>Auth · uploads · publish · versions</small></div><strong>↙ &nbsp; ↘</strong><div><b>PostgreSQL</b><small>metadata / versions / admin</small></div><div><b>AWS S3</b><small>versioned project files</small></div></div><p class="muted">The static frontend can operate in demo mode without the backend. When deployed, <code>API_BASE_URL</code> points to the FastAPI service.</p></section>
+<section id="quality" class="doc-section"><span class="kicker">05 / QUALITY</span><h2>Performance, security & quality goals</h2><div class="quality-grid"><div><h3>Performance</h3><p>Static first load should remain lightweight. API responses should be JSON and cacheable where appropriate.</p></div><div><h3>Security</h3><p>JWT admin authentication, bcrypt password hashes, CORS allow-list, S3 private objects and short-lived pre-signed URLs.</p></div><div><h3>Reliability</h3><p>Immutable published history, health endpoint, systemd restart policy and explicit error states.</p></div><div><h3>Usability</h3><p>Responsive public site, accessible navigation, clear upload states and useful feedback.</p></div><div><h3>Maintainability</h3><p>Separated routers, models, schemas, storage, frontend API client and design tokens.</p></div><div><h3>Observability</h3><p>Structured application logs and upload/publish records provide an audit trail.</p></div></div></section>
+<section id="risks" class="doc-section"><span class="kicker">06 / RISKS</span><h2>Technical risk register</h2><div class="table-wrap"><table><thead><tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr></thead><tbody><tr><td>S3 credentials misconfigured</td><td>High</td><td>Use IAM role / least privilege and environment validation.</td></tr><tr><td>Stale tool data</td><td>High</td><td>Attach freshness constraints and reject expired facts.</td></tr><tr><td>JWT exposure</td><td>High</td><td>HTTPS, short expiry, sessionStorage and no secrets in frontend.</td></tr><tr><td>API unavailable</td><td>Medium</td><td>Public frontend falls back to static/demo data.</td></tr><tr><td>Version overwritten</td><td>Medium</td><td>Append-only publish records; never delete previous versions.</td></tr></tbody></table></div></section>
+<section id="timeline" class="doc-section">
+  <span class="kicker">07 / TIMELINE</span>
+  <h2>17-week delivery plan</h2>
+  <div class="glass gantt-panel">
+    <div class="gantt-toolbar">
+      <p class="muted">Interactive schedule with task dependencies, milestones, and week/month views.</p>
+      <div class="gantt-controls" aria-label="Gantt view controls">
+        <button type="button" data-view="Week">Weeks</button>
+        <button type="button" data-view="Month">Months</button>
+        <button type="button" data-view="Day">Days</button>
+      </div>
+    </div>
+    <div id="gantt" class="gantt frappe-gantt-host" aria-label="ToolTruth 17-week project Gantt chart"></div>
+    <div class="gantt-legend">
+      <span><i></i> Planned work</span>
+      <span><i></i> Dependent work</span>
+      <span><i></i> Final validation / demo</span>
+    </div>
+  </div>
+</section>
+</main></div>
+<footer class="footer"><div class="container footer-inner"><div><strong>ToolTruth · Planning v1</strong><span>Immutable project history.</span></div><a href="archive.html">View archive →</a></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.umd.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const host = document.getElementById("gantt");
+    if (!host || typeof Gantt === "undefined") return;
+
+    const tasks = [
+      { id: "planning", name: "Planning & requirements", start: "2026-08-10", end: "2026-08-23", progress: 100 },
+      { id: "states", name: "Versioned state machines", start: "2026-08-17", end: "2026-09-06", progress: 80, dependencies: "planning" },
+      { id: "schemas", name: "Tool contracts & schemas", start: "2026-08-24", end: "2026-09-13", progress: 70, dependencies: "planning" },
+      { id: "core", name: "Verification engine", start: "2026-09-07", end: "2026-10-04", progress: 45, dependencies: "states,schemas" },
+      { id: "domains", name: "Three controlled domain simulators", start: "2026-09-21", end: "2026-10-18", progress: 35, dependencies: "core" },
+      { id: "gateway", name: "Gateway, evidence & audit trail", start: "2026-10-05", end: "2026-10-25", progress: 20, dependencies: "core" },
+      { id: "benchmark", name: "75-task benchmark & evaluation", start: "2026-10-19", end: "2026-11-08", progress: 10, dependencies: "domains,gateway" },
+      { id: "frontend", name: "Website, admin & deliverable archive", start: "2026-09-28", end: "2026-11-08", progress: 25, dependencies: "planning" },
+      { id: "integration", name: "Integration, security & reliability testing", start: "2026-11-02", end: "2026-11-22", progress: 0, dependencies: "benchmark,frontend" },
+      { id: "demo", name: "Final demo & deployment validation", start: "2026-11-23", end: "2026-12-06", progress: 0, dependencies: "integration" }
+    ];
+
+    const chart = new Gantt("#gantt", tasks, {
+      view_mode: "Week",
+      view_mode_select: true,
+      readonly: true,
+      readonly_progress: true,
+      readonly_dates: true,
+      today_button: false,
+      scroll_to: "start",
+      lines: "both",
+      column_width: 45,
+      bar_height: 28,
+      padding: 16,
+      date_format: "DD MMM YYYY",
+      popup_on: "click"
+    });
+
+    document.querySelectorAll(".gantt-controls [data-view]").forEach(button => {
+      button.addEventListener("click", () => chart.change_view_mode(button.dataset.view));
+    });
+  });
+</script>
+</body></html>
