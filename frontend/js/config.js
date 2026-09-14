@@ -1,5 +1,5 @@
 window.TOOLTRUTH_CONFIG = {
-  API_BASE_URL: "http://127.0.0.1:8000",
+  API_BASE_URL: "https://tooltruth.duckdns.org",
   DEMO_MODE: false,
   MAX_FILE_SIZE_MB: 25,
   GITHUB_REPO_URL: "https://github.com/YOUR-USERNAME/YOUR-REPO",
