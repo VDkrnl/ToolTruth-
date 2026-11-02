@@ -1,7 +1,13 @@
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 from .schemas import ConsistencyReport, CheckResult
+
+# Input rules for live (Shopify) calls. SKUs go into a search string, so keep them strict.
+SKU_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._\-]{0,63}$")
+LOCATION_PATTERN = re.compile(r"^(gid://shopify/Location/)?\d{1,20}$")
+LIVE_ACTIONS = {"get_inventory": ["sku"]}   # read-only release
 
 
 class ConsistencyEngine:
@@ -191,19 +197,32 @@ class ConsistencyEngine:
                                    reason=f"Duplicate {action} for {entity_id} by agent {agent_id} within {window}s.")
         return CheckResult(name="duplicate_action", passed=True, reason="No duplicate action in the configured window.")
 
-    @staticmethod
-    def produce_decision(checks: list[CheckResult]) -> Literal["allow","block","request_more_evidence"]:
-        hard_names={"schema","state_transition","invariants","contradiction","ordering","idempotency",
-                    "duplicate_action","tool_result","temporal_inventory","temporal_cancellation",
-                    "retry_after_compensation"}
-        if any((not c.passed and c.name in hard_names) for c in checks):
-            return "block"
-        if any(not c.passed and c.name in {"user_constraints","freshness"} for c in checks):
-            return "request_more_evidence"
-        if any(not c.passed for c in checks):
-            return "block"
-        return "allow"
+    # Evidence checks: insufficient data, not a proven violation.
+    EVIDENCE_CHECKS = frozenset({
+        "user_constraints", "freshness",
+        # Shopify live-path evidence checks:
+        "source_available", "source_consistency", "location_resolved",
+    })
+    # Hard checks: these prove the action is definitively wrong.
+    HARD_CHECKS = frozenset({
+        "schema", "state_transition", "invariants", "contradiction", "ordering",
+        "idempotency", "duplicate_action", "tool_result",
+        "temporal_inventory", "temporal_cancellation", "retry_after_compensation",
+        # Shopify-specific hard checks:
+        "product_active", "sufficient_inventory",
+    })
 
+    @classmethod
+    def produce_decision(cls, checks: list[CheckResult]) -> Literal["allow","block","request_more_evidence"]:
+        failed = [c for c in checks if not c.passed]
+        # Hard failures -> unconditional BLOCK (checked first so product_active+sufficient_inventory win)
+        if any(c.name in cls.HARD_CHECKS for c in failed):
+            return "block"
+        # Evidence failures -> more information needed
+        if any(c.name in cls.EVIDENCE_CHECKS for c in failed):
+            return "request_more_evidence"
+        # Unknown check name fails CLOSED
+        return "block" if failed else "allow"
     def run_all(self, domain, action, payload, tool_data, context=None,
                 entity_id=None, agent_id="anonymous", entity_state=None,
                 target_state=None, historical_claims=None, source_timestamp=None):

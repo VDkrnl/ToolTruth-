@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 from database import init_db
-from routers import auth, uploads, publish, versions, files, gateway, benchmark, prototype
+from routers import auth, uploads, publish, versions, files, gateway, benchmark, prototype, shop, shopify
 
 
 @asynccontextmanager
@@ -49,6 +49,8 @@ app.include_router(files.router)
 app.include_router(gateway.router)
 app.include_router(benchmark.router)
 app.include_router(prototype.router)
+app.include_router(shop.router)
+app.include_router(shopify.router)
 
 
 @app.get("/healthz")
