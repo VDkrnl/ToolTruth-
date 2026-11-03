@@ -9,6 +9,7 @@ load_dotenv()
 
 from database import init_db
 from routers import auth, uploads, publish, versions, files, gateway, benchmark, prototype, shop, shopify
+from core.ratelimit import RateLimitMiddleware
 
 
 @asynccontextmanager
@@ -40,6 +41,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# B-16: Per-IP rate limiting for mutation-heavy endpoints.
+app.add_middleware(RateLimitMiddleware)
 
 app.include_router(auth.router)
 app.include_router(uploads.router)

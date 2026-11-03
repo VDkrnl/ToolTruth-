@@ -14,13 +14,14 @@ def test_gateway_call():
 
 
 def test_gateway_blocks_duplicate():
+    # B-20: use WRITE action (reserve) so idempotency check fires after B-06 fix.
     init_db(); db=SessionLocal()
     try:
         db.query(EvidenceNode).filter(EvidenceNode.source=="benchmark").delete(synchronize_session=False); db.commit()
         i=ToolCallInterceptor(db)
         agent="gateway-dup-unique"
-        assert i.call("ecommerce","get_inventory",{"product_id":"SKU-100"},agent)["allowed"]
-        second=i.call("ecommerce","get_inventory",{"product_id":"SKU-100"},agent)
+        assert i.call("ecommerce","reserve",{"product_id":"SKU-100","quantity":1},agent)["allowed"]
+        second=i.call("ecommerce","reserve",{"product_id":"SKU-100","quantity":1},agent)
         assert second["allowed"] is False and second["fault_type"]=="duplicate_action"
     finally: db.close()
 

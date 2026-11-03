@@ -9,6 +9,9 @@ SKU_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._\-]{0,63}$")
 LOCATION_PATTERN = re.compile(r"^(gid://shopify/Location/)?\d{1,20}$")
 LIVE_ACTIONS = {"get_inventory": ["sku"]}   # read-only release
 
+# B-04 / B-06: actions that mutate state and must have fresh evidence.
+WRITE_ACTIONS = {"reserve", "sell", "deploy", "confirm", "check_in", "board"}
+
 
 class ConsistencyEngine:
     def __init__(self, db=None, duplicate_window_seconds=60):
@@ -54,10 +57,17 @@ class ConsistencyEngine:
                            f"Illegal transition {entity_state} -> {target_state} for {action}.")
 
     def check_staleness(self, timestamp, max_age_seconds=300):
+        # B-05: future timestamps beyond 5s clock skew are rejected.
         try:
             parsed = datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
-            if parsed.tzinfo is None: parsed = parsed.replace(tzinfo=timezone.utc)
-            age = max(0, (datetime.now(timezone.utc) - parsed).total_seconds())
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            now = datetime.now(timezone.utc)
+            age = (now - parsed).total_seconds()
+            if age < -5:   # more than 5s in the future
+                return CheckResult(name="freshness", passed=False,
+                                   reason=f"Source timestamp is {int(-age)}s in the future (possible clock skew or forgery).")
+            age = max(0.0, age)
             ok = age <= max_age_seconds
             return CheckResult(name="freshness", passed=ok,
                                reason="Fresh enough." if ok else f"Fact is {int(age)}s old; limit is {max_age_seconds}s.")
@@ -152,10 +162,11 @@ class ConsistencyEngine:
         import hashlib
         window = self.duplicate_window_seconds if window_seconds is None else window_seconds
         cutoff = datetime.now(timezone.utc) - timedelta(seconds=window)
+        # B-06: add .limit(100) to prevent unbounded history scan.
         events = self.db.query(EventLog).filter(
             EventLog.agent_id == agent_id, EventLog.domain == domain,
             EventLog.action == action, EventLog.status == "allowed"
-        ).order_by(EventLog.id.desc()).all()
+        ).order_by(EventLog.id.desc()).limit(100).all()
         for event in events:
             event_time = event.timestamp
             if event_time is None: continue
@@ -223,6 +234,7 @@ class ConsistencyEngine:
             return "request_more_evidence"
         # Unknown check name fails CLOSED
         return "block" if failed else "allow"
+
     def run_all(self, domain, action, payload, tool_data, context=None,
                 entity_id=None, agent_id="anonymous", entity_state=None,
                 target_state=None, historical_claims=None, source_timestamp=None):
@@ -231,7 +243,18 @@ class ConsistencyEngine:
         transition=domain.transition_for(action, entity_state)
         ttl=transition.freshness_ttl_seconds if transition else int(payload.get("max_age_seconds",300))
         ts=source_timestamp or tool_data.get("as_of_timestamp")
-        if ts: checks.append(self.check_staleness(ts, int(payload.get("max_age_seconds",ttl))))
+
+        # B-03: caller may only TIGHTEN the freshness window, never loosen it.
+        requested = payload.get("max_age_seconds")
+        effective_ttl = min(ttl, requested) if isinstance(requested, int) and not isinstance(requested, bool) and requested > 0 else ttl
+
+        # B-04: missing timestamp on write actions is a hard freshness failure.
+        if ts:
+            checks.append(self.check_staleness(ts, effective_ttl))
+        elif action in WRITE_ACTIONS:
+            checks.append(CheckResult(name="freshness", passed=False,
+                                      reason="No source timestamp; evidence age is unknown for this write action."))
+
         checks.append(self.check_state(domain,entity_state,target_state,action))
         historical_claims=historical_claims or []
         new_claims=[{"field":k,"value":v} for k,v in tool_data.items()
@@ -239,14 +262,16 @@ class ConsistencyEngine:
         if historical_claims or context:
             checks.append(self.check_historical_contradictions(historical_claims,new_claims))
             checks.append(self.check_contradictions(context,new_claims))
-        if entity_id:
+        # B-06: idempotency check only for write actions.
+        if entity_id and action in WRITE_ACTIONS:
             import hashlib
             payload_hash=hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(",",":")).encode()).hexdigest()
             checks.append(self.check_idempotency(agent_id,domain.name,action,entity_id,payload_hash))
         if tool_data.get("error"):
             checks.append(CheckResult(name="tool_result",passed=False,
                                       reason=f"Simulator rejected the action: {tool_data['error']}."))
-        checks.append(self.check_invariants(domain,{**tool_data,**payload}))
+        # B-07: flip merge order so observed tool_data wins over payload claims.
+        checks.append(self.check_invariants(domain,{**payload,**tool_data}))
         entity_for_constraints = domain.entities.get(entity_id) if entity_id else None
         constraint_context = {**(entity_for_constraints.data if entity_for_constraints else {}), **context, **payload, **tool_data}
         checks.append(self.check_user_constraints(domain,action,constraint_context,context))
