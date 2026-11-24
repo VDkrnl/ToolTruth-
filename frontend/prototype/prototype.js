@@ -60,6 +60,30 @@
         reopen: {issue_id:"ISS-104"},
         deploy: {deployment_id:"DEP-100", environment:"staging"}
       }
+    },
+    shopify_content: {
+      entity: "product-id",
+      actions: {
+        // READ tools
+        list_products:       {query:"", limit:10},
+        get_product:         {product_id:"<product-id>"},
+        list_pages:          {limit:10},
+        get_page:            {page_id:"<page-id>"},
+        list_blogs:          {limit:10},
+        list_blog_articles:  {blog_id:"<blog-id>", limit:10},
+        get_blog_article:    {blog_id:"<blog-id>", article_id:"<article-id>"},
+        list_collections:    {limit:10},
+        get_collection:      {collection_id:"<collection-id>"},
+        get_metafields:      {owner_resource:"product", owner_id:"<product-id>"},
+        // WRITE tools
+        create_product:      {title:"New Product", body_html:"<p>Description</p>", vendor:"", product_type:"", tags:"", status:"draft"},
+        update_product:      {product_id:"<product-id>", title:"", body_html:"", status:""},
+        create_page:         {title:"New Page", body_html:"<p>Content</p>", published:false},
+        update_page:         {page_id:"<page-id>", title:"", body_html:"", published:null},
+        create_blog_article: {blog_id:"<blog-id>", title:"New Article", body_html:"<p>Content</p>", author:"", tags:"", published:false},
+        update_blog_article: {blog_id:"<blog-id>", article_id:"<article-id>", title:"", body_html:""},
+        set_metafield:       {owner_resource:"product", owner_id:"<product-id>", namespace:"custom", key:"label", value:"", value_type:"string"}
+      }
     }
   };
 
@@ -75,6 +99,15 @@
     if (domain === "devops") {
       if (action === "deploy") template.deployment_id = id || "DEP-100";
       else template.issue_id = id || template.issue_id || "ISS-100";
+    }
+    if (domain === "shopify_content") {
+      // Inject the entity-id field into whichever key the template uses.
+      if ("product_id" in template)    template.product_id    = id || template.product_id;
+      if ("page_id" in template)       template.page_id       = id || template.page_id;
+      if ("blog_id" in template)       template.blog_id       = id || template.blog_id;
+      if ("article_id" in template)    template.article_id    = id || template.article_id;
+      if ("collection_id" in template) template.collection_id = id || template.collection_id;
+      if ("owner_id" in template)      template.owner_id      = id || template.owner_id;
     }
     $("payload").value = JSON.stringify(template, null, 2);
   }
@@ -101,6 +134,23 @@
 
   async function loadDomain() {
     const domain = $("domain").value;
+
+    // ── Shopify Content: no state-machine endpoint; populate from local defaults. ──
+    if (domain === "shopify_content") {
+      $("state-graph").innerHTML =
+        `<div class="state-track"><div class="state-node"><b>Shopify Content Agent</b><small>Manage products, pages, blogs, collections and metafields.</small></div></div>`;
+      $("state-machine-meta").innerHTML =
+        `<p class="muted">Shopify Content mode — read/write store content via the Shopify Admin API. No order placement.</p>`;
+      const actionNames = Object.keys(defaults.shopify_content.actions);
+      $("action").innerHTML = actionNames.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join("");
+      $("entity-id").value = defaults.shopify_content.entity;
+      setPayloadForAction();
+      $("api-status").textContent = "Content mode";
+      $("api-status").className = "severity-chip severity-low";
+      $("comparison-body").innerHTML = `<tr><td colspan="8">Comparison metrics are not available for the Shopify Content agent.</td></tr>`;
+      return;
+    }
+
     try {
       const data = await request(`/prototype/state-machine/${domain}`);
       renderStateMachine(data);
@@ -204,6 +254,7 @@
     if (domain === "travel" && ["confirm","check_in","board","cancel"].includes(action)) payload.booking_id = id;
     if (domain === "devops" && action === "deploy") payload.deployment_id = id;
     if (domain === "devops" && action !== "deploy") payload.issue_id = id;
+    // shopify_content: IDs are already embedded in the payload template.
 
     const context = {};
     if ($("budget-enabled").checked && $("budget-limit").value !== "") {
