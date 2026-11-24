@@ -24,12 +24,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_default_origins = ",".join([
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "https://vdkrnl.github.io",   # GitHub Pages production frontend
+])
+
 origins = [
     x.strip()
-    for x in os.getenv(
-        "CORS_ORIGINS",
-        "http://localhost:5500,http://127.0.0.1:5500",
-    ).split(",")
+    for x in os.getenv("CORS_ORIGINS", _default_origins).split(",")
     if x.strip()
 ]
 
