@@ -1,33 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // B-31: named helper instead of repeated getElementById calls.
-  const $ = id => document.getElementById(id);
-
-  // B-31: 401 interceptor — clear token and redirect to login.
-  function handle401() {
-    sessionStorage.removeItem(ToolTruthAPI.tokenKey);
-    location.href = "login.html";
-  }
-
-  const loginForm = $("login-form");
+  const loginForm = document.getElementById("login-form");
 
   if (loginForm) {
     loginForm.onsubmit = async e => {
       e.preventDefault();
-      const err = $("login-error");
+      const err = document.getElementById("login-error");
       err.textContent = "";
-      const username = $("username");
-      const password = $("password");
+      const username = document.getElementById("username");
+      const password = document.getElementById("password");
       try {
         const r = await ToolTruthAPI.login(username.value, password.value);
         sessionStorage.setItem(ToolTruthAPI.tokenKey, r.access_token);
         location.href = "dashboard.html";
       } catch (x) {
-        // B-31: Surface 401 specifically.
-        if (x?.status === 401 || x?.message?.includes("401")) {
-          err.textContent = "Invalid credentials. Please try again.";
-        } else {
-          err.textContent = "Login failed. Check your credentials or API connection.";
-        }
+        err.textContent = "Login failed. Check your credentials or API connection.";
       }
     };
     return;
@@ -38,14 +24,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const fileInput = $("file-input");
-  const folderInput = $("folder-input");
-  const chooseFolderBtn = $("choose-folder");
-  const drop = $("drop-zone");
-  const nameEl = $("file-name");
-  const progress = $("upload-progress") || document.querySelector(".progress");
+  const fileInput = document.getElementById("file-input");
+  const folderInput = document.getElementById("folder-input");
+  const chooseFolderBtn = document.getElementById("choose-folder");
+  const drop = document.getElementById("drop-zone");
+  const nameEl = document.getElementById("file-name");
+  const progress = document.getElementById("upload-progress") || document.querySelector(".progress");
   const bar = document.querySelector(".progress span");
-  const status = $("upload-status");
+  const status = document.getElementById("upload-status");
 
   let selected = null;
   let uploadId = null;
@@ -210,23 +196,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const date = $("date");
+  const date = document.getElementById("date");
   if (date) date.value = today;
 
-  const form = $("publish-form");
-
-  // B-31: Wrap all API calls with 401 detection.
-  async function apiCallWithAuth(fn) {
-    try {
-      return await fn();
-    } catch (x) {
-      if (x?.status === 401 || x?.message?.includes("401") || x?.message?.includes("Unauthorized")) {
-        handle401();
-        return null;
-      }
-      throw x;
-    }
-  }
+  const form = document.getElementById("publish-form");
 
   if (form) {
     form.onsubmit = async e => {
@@ -239,24 +212,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         if (progress) progress.style.display = "block";
-        const r = await apiCallWithAuth(() => ToolTruthAPI.upload(selected, p => {
+        const r = await ToolTruthAPI.upload(selected, p => {
           if (bar) bar.style.width = p + "%";
-        }));
-        if (!r) return;
+        });
 
         uploadId = r.id;
         setStatus("Upload complete.");
 
-        const pub = await apiCallWithAuth(() => ToolTruthAPI.publish({
+        const pub = await ToolTruthAPI.publish({
           upload_id: uploadId,
-          title: $("title")?.value,
-          slug: $("slug")?.value,
-          version: $("version")?.value,
-          date: date?.value,
-          authors: $("authors")?.value,
-          summary: $("summary")?.value,
-        }));
-        if (!pub) return;
+          title: title.value,
+          slug: slug.value,
+          version: version.value,
+          date: date.value,
+          authors: authors.value,
+          summary: summary.value
+        });
 
         toast("Published successfully", "good");
         addHistory(pub);
@@ -273,12 +244,12 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  $("logout")?.addEventListener("click", () => {
+  document.getElementById("logout")?.addEventListener("click", () => {
     sessionStorage.removeItem(ToolTruthAPI.tokenKey);
     location.href = "login.html";
   });
 
-  $("refresh")?.addEventListener("click", loadHistory);
+  document.getElementById("refresh")?.addEventListener("click", loadHistory);
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -286,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "<": "&lt;",
       ">": "&gt;",
       '"': "&quot;",
-      "'": "&#039;",
+      "'": "&#039;"
     }[char]));
   }
 
@@ -309,21 +280,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function addHistory(v) {
-    const tbody = $("history");
+    const tbody = document.getElementById("history");
     if (!tbody) return;
     tbody.insertAdjacentHTML("afterbegin", historyRow(v));
   }
 
   async function loadHistory() {
-    const tbody = $("history");
+    const tbody = document.getElementById("history");
     if (!tbody) return;
 
     let data = TOOLTRUTH_CONFIG.STATIC_VERSIONS || [];
 
     try {
-      if (!TOOLTRUTH_CONFIG.DEMO_MODE) {
-        data = await apiCallWithAuth(() => ToolTruthAPI.versions()) ?? data;
-      }
+      if (!TOOLTRUTH_CONFIG.DEMO_MODE) data = await ToolTruthAPI.versions();
     } catch (e) {
       console.warn("Could not load publishing history:", e);
     }
@@ -331,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.innerHTML = data.map(historyRow).join("");
   }
 
-  $("history")?.addEventListener("click", async e => {
+  document.getElementById("history")?.addEventListener("click", async e => {
     const button = e.target.closest(".delete-presentation");
     if (!button) return;
 
@@ -344,7 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
     button.textContent = "Deleting…";
 
     try {
-      await apiCallWithAuth(() => ToolTruthAPI.deleteVersion(id));
+      await ToolTruthAPI.deleteVersion(id);
       button.closest("tr")?.remove();
       toast("Presentation deleted successfully", "good");
     } catch (err) {
@@ -355,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function toast(msg, type = "good") {
-    const t = $("toast");
+    const t = document.getElementById("toast");
     if (!t) return;
     t.textContent = msg;
     t.className = `toast show ${type}`;

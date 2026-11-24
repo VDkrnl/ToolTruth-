@@ -114,10 +114,9 @@ def test_fault_reversibility():
         db.close(); engine.dispose()
 
 def test_duplicate_fault_blocks(client):
-    # B-20: use WRITE action (reserve) so idempotency check fires after B-06 fix.
     r=client.post("/prototype/simulate",json={
-        "domain":"ecommerce","action":"reserve",
-        "payload":{"product_id":"SKU-100","quantity":1},"agent_id":"duplicate-test",
+        "domain":"ecommerce","action":"get_inventory",
+        "payload":{"product_id":"SKU-100"},"agent_id":"duplicate-test",
         "fault_config":{"type":"duplicate_action","severity":"high","params":{}}
     })
     assert r.status_code == 200

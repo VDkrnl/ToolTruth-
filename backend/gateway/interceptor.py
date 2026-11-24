@@ -2,7 +2,6 @@ import json
 import copy
 from engine.consistency import ConsistencyEngine
 from engine.claim_extractor import ClaimExtractor
-from engine.schemas import CheckResult
 from gateway.models import EventLog, EvidenceNode, EvidenceEdge
 from domains.ecommerce import EcommerceDomain
 from domains.devops import DevOpsDomain
@@ -23,19 +22,15 @@ class ToolCallInterceptor:
 
     @staticmethod
     def entity_id_for(domain, action, payload):
-        # B-10: Return None instead of demo IDs when the identifier is absent.
         if domain == "ecommerce":
-            return payload.get("product_id")
+            return payload.get("product_id", "SKU-100")
         if domain == "devops":
             if action == "deploy":
-                return payload.get("deployment_id")
-            return payload.get("issue_id")
+                return payload.get("deployment_id", "DEP-100")
+            return payload.get("issue_id", "ISS-100")
         if domain == "travel":
-            # Action-specific precedence: seat actions use seat_id, booking actions use booking_id
-            if action in {"hold", "get_availability"}:
-                return payload.get("seat_id")
-            return payload.get("booking_id")
-        return payload.get("entity_id")
+            return payload.get("booking_id", payload.get("seat_id", "SEAT-12A"))
+        return payload.get("entity_id", "unknown")
 
     def call(self, domain_name, action, payload, agent_id="anonymous", context_snapshot=None, fault_config=None):
         if domain_name not in self.domains:
@@ -43,24 +38,9 @@ class ToolCallInterceptor:
         domain = self.domains[domain_name]
         payload = dict(payload or {})
         entity_id = self.entity_id_for(domain_name, action, payload)
-
-        # B-10: Block immediately when no entity identifier is present.
-        if entity_id is None:
-            checks = [CheckResult(name="schema", passed=False,
-                                  reason="Entity identifier is required (product_id / issue_id / seat_id / booking_id).")]
-            decision = self.engine.produce_decision(checks)
-            return {
-                "allowed": False, "decision": decision,
-                "result": {"error": "schema_error", "entity_id": None},
-                "reason": checks[0].reason, "fault_type": "schema_error",
-                "evidence_trail": [], "checks": [c.model_dump() for c in checks],
-                "pre_state": None, "post_state": None,
-                "state_version_before": None, "state_version_after": None,
-            }
-
         entity = domain.entities.get(entity_id)
         if entity is None and domain_name == "devops" and action == "deploy":
-            entity = domain.entities.get(payload.get("deployment_id"))
+            entity = domain.entities.get(payload.get("deployment_id", "DEP-100"))
             entity_id = entity.id if entity else entity_id
 
         pre_snapshot = domain.snapshot()
@@ -123,35 +103,30 @@ class ToolCallInterceptor:
                 if injected:
                     ftype = injected["type"]
                     if ftype == "missing_update":
-                        report_checks.append(CheckResult(
+                        report_checks.append(__import__("engine.schemas", fromlist=["CheckResult"]).CheckResult(
                             name="missing_update", passed=False,
                             reason=f"Required state field '{fault_context.get('_fault_missing_update')}' was removed."))
                     elif ftype == "out_of_order":
-                        report_checks.append(CheckResult(
+                        report_checks.append(__import__("engine.schemas", fromlist=["CheckResult"]).CheckResult(
                             name="ordering", passed=False,
                             reason="Injected evidence events are out of causal order."))
                     elif ftype == "race_condition":
-                        report_checks.append(CheckResult(
+                        report_checks.append(__import__("engine.schemas", fromlist=["CheckResult"]).CheckResult(
                             name="race_condition", passed=False,
                             reason="Concurrent reserve/sell operations observed on the same entity."))
                     elif ftype == "partial_failure":
-                        report_checks.append(CheckResult(
+                        report_checks.append(__import__("engine.schemas", fromlist=["CheckResult"]).CheckResult(
                             name="partial_failure", passed=False,
                             reason="First mutation succeeded but the downstream payment step failed; compensation was required."))
                     elif ftype == "invalid_transition":
-                        report_checks.append(CheckResult(
+                        report_checks.append(__import__("engine.schemas", fromlist=["CheckResult"]).CheckResult(
                             name="state_transition", passed=False,
                             reason=f"Injected invalid state makes action '{action}' illegal."))
                     # Re-run the deterministic decision after the fault-specific check.
                     decision = self.engine.produce_decision(report_checks)
-                    # B-13: Pick the first failing hard check (or first failing check) for the reason,
-                    # not always the last check.
-                    failed = [c for c in report_checks if not c.passed]
-                    if failed:
-                        hard_failed = [c for c in failed if c.name in ConsistencyEngine.HARD_CHECKS]
-                        first_failed = hard_failed[0] if hard_failed else failed[0]
-                        fault_type = ftype if injected else first_failed.name
-                        blocked_reason = first_failed.reason
+                    if not report_checks[-1].passed:
+                        fault_type = ftype
+                        blocked_reason = report_checks[-1].reason
                 else:
                     decision = report.decision
 

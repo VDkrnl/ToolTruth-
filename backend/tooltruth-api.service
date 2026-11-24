@@ -3,17 +3,13 @@ Description=ToolTruth FastAPI API
 After=network.target
 
 [Service]
-User=tooltruth
-Group=tooltruth
+User=www-data
+Group=www-data
 WorkingDirectory=/opt/tooltruth/backend
-EnvironmentFile=/etc/tooltruth/gateway.env
-# Single worker: OrderService uses a process-wide lock (_ORDER_LOCK) that requires
-# exactly one process. See DEPLOY.md for multi-worker options.
-ExecStart=/opt/tooltruth/backend/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000 --workers 1
+EnvironmentFile=/opt/tooltruth/backend/.env
+ExecStart=/opt/tooltruth/backend/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000 --workers 2
 Restart=always
 RestartSec=5
-NoNewPrivileges=true
-ProtectSystem=full
 
 [Install]
 WantedBy=multi-user.target

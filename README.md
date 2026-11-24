@@ -46,13 +46,12 @@ The repository contains **75 benchmark tasks**:
 - 25 DevOps
 - 25 travel
 
-The Benchmark Lab supports 5 comparison modes:
+The Benchmark Lab supports:
 
 - `tooltruth`
 - `agent_alone`
 - `prompt_reflection`
 - `schema_only`
-- `stateless_policy`
 
 It reports task success, precision, recall, F1, false-block rate, unsafe actions prevented and latency.
 

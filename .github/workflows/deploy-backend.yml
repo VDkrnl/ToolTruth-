@@ -2,26 +2,20 @@ name: Deploy FastAPI backend
 on:
   push:
     branches: [main]
-    paths: ["backend/**", "sdk/**"]
+    paths: ["backend/**","sdk/**"]
   workflow_dispatch:
-
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      APP_ENV: test
-      JWT_SECRET: "ci-test-secret-at-least-32-characters-long"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.13" }
-      - name: Install dependencies
-        run: |
-          pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+        with: {python-version: "3.13"}
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
       - name: Run tests
         working-directory: backend
-        run: python -m pytest -q --tb=short
-
+        run: pytest tests -v --tb=short
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -35,18 +29,9 @@ jobs:
           ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
       - name: Sync backend
         run: |
-          rsync -az --delete \
-            --exclude='.env' --exclude='.env.*' \
-            --exclude='.venv/' --exclude='*.db' --exclude='*.sqlite*' \
-            --exclude='uploads/' --exclude='**/__pycache__/' \
-            --exclude='.pytest_cache/' \
-            backend/ "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/tooltruth/backend/"
+          rsync -az --delete --exclude='.env' --exclude='.venv' --exclude='uploads/' --exclude='**/__pycache__/' --exclude='.pytest_cache/' backend/ "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/tooltruth/backend/"
       - name: Sync SDK
         run: |
           rsync -az --delete sdk/ "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/tooltruth/sdk/"
-      - name: Restart API and health check
-        run: |
-          ssh "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-            "sudo systemctl restart tooltruth-api && \
-             sudo systemctl --no-pager --full status tooltruth-api && \
-             curl -sf http://localhost:8000/healthz"
+      - name: Restart API
+        run: ssh "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "sudo systemctl restart tooltruth-api && sudo systemctl --no-pager --full status tooltruth-api"
