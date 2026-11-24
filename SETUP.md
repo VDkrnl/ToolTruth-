@@ -121,7 +121,7 @@ You do **not** need AWS credentials for this local setup.
 From `backend`:
 
 ```powershell
-python seed_admin.py
+python -m database_seed  # or: python seed_admin.py if the file exists
 ```
 
 Expected first-time output:
@@ -137,14 +137,14 @@ Username: admin
 Password: admin123
 ```
 
-If it says `Admin already exists`, that is fine. To reset the local database completely, stop the backend and remove `backend/tooltruth.db`, then run `python seed_admin.py` again.
+If it says `Admin already exists`, that is fine. To reset the local database completely, stop the backend and remove `backend/tooltruth.db`, then run `python -m database_seed  # or: python seed_admin.py if the file exists` again.
 
 ## 7. Run the backend
 
 Keep the first terminal open:
 
 ```powershell
-python seed_admin.py
+python -m database_seed  # or: python seed_admin.py if the file exists
 ```
 
 Expected:
@@ -256,7 +256,7 @@ pytest tests -v --tb=short
 Expected current result:
 
 ```text
-6 passed
+112 passed  (exact count grows as new tests are added)
 ```
 
 ## 13. SDK test

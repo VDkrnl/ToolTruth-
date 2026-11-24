@@ -1,17 +1,9 @@
 """
 Shared pytest fixtures for the backend test suite.
 
-Bug fix (see BUG_REPORT.md #10): tests used to share whichever tooltruth.db
-happened to be on disk, and only partially cleaned up EvidenceNode rows.
-Leftover EventLog/Version/UploadLog/Admin rows from previous runs (or from
-manually poking the API while developing) could make test_duplicate_action
-_detected and test_benchmark_baselines_differ pass or fail depending on
-history, not on the code under test.
-
-This fixture points the app at a fresh temp-file SQLite database for the
-whole test session (created before any test module imports `database`,
-so every module sees the same isolated engine) and fully truncates every
-table before each individual test runs.
+Every test gets a fresh, empty database (no leftover rows from previous tests or
+from manual development sessions).  We redirect the app at a temp-file SQLite
+database for the whole session, then truncate every mapped table before each test.
 """
 import os
 import tempfile
@@ -20,7 +12,8 @@ import pytest
 
 _tmp_dir = tempfile.TemporaryDirectory(prefix="tooltruth-test-db-")
 os.environ["DATABASE_URL"] = f"sqlite:///{os.path.join(_tmp_dir.name, 'test.db')}"
-os.environ.setdefault("JWT_SECRET", "test-secret-for-pytest-only")
+os.environ.setdefault("JWT_SECRET", "test-secret-for-pytest-only-at-least-32chars")
+os.environ.setdefault("APP_ENV", "test")
 
 
 @pytest.fixture(autouse=True)
@@ -34,16 +27,20 @@ def isolated_local_storage(tmp_path, monkeypatch):
 
 @pytest.fixture(autouse=True)
 def clean_db():
-    """Reset all tables to empty before every test."""
-    from database import SessionLocal, init_db
-    from models import Admin, UploadLog, Version, BenchmarkRun
-    from gateway.models import EventLog, EvidenceNode, EvidenceEdge
+    """Reset ALL tables to empty before every test.
+
+    Uses Base.metadata.sorted_tables in reverse-dependency order so that
+    foreign-key constraints (SQLite enforces them when enabled) are satisfied.
+    OrderAttempt and ShopifyWebhookEvent are included so idempotency keys
+    from a previous test never bleed into the next one.
+    """
+    from database import SessionLocal, init_db, Base
 
     init_db()
     db = SessionLocal()
     try:
-        for model in (EvidenceEdge, EvidenceNode, EventLog, BenchmarkRun, Version, UploadLog, Admin):
-            db.query(model).delete()
+        for table in reversed(Base.metadata.sorted_tables):
+            db.execute(table.delete())
         db.commit()
     finally:
         db.close()

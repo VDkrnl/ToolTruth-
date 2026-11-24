@@ -161,7 +161,17 @@
           meta.textContent = `${version.version || ""} · ${version.date || ""} · ${version.authors || "ToolTruth Team"}`;
         }
         const file = await ToolTruthAPI.fileUrl(id);
-        viewer.innerHTML = `<iframe title="${(version?.title || "ToolTruth presentation").replace(/"/g, '&quot;')}" src="${file.url}#toolbar=0&navpanes=0&scrollbar=0" allow="fullscreen"></iframe>`;
+        // B-33: Build the iframe via DOM — never inject server URLs via innerHTML.
+        const iframeTitle = (version?.title || "ToolTruth presentation");
+        const iframe = document.createElement("iframe");
+        iframe.title = iframeTitle;
+        iframe.allow = "fullscreen";
+        // Validate the URL with new URL() before assigning to iframe.src.
+        const safeUrl = new URL(file.url, location.origin);
+        safeUrl.hash = "toolbar=0&navpanes=0&scrollbar=0";
+        iframe.src = safeUrl.href;
+        viewer.textContent = "";
+        viewer.appendChild(iframe);
       } catch (err) {
         title.textContent = "Presentation unavailable";
         const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({
